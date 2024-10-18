@@ -1,0 +1,56 @@
+# version: '3.7'
+services:
+
+#app
+  app:
+    build:
+      args:
+        user: developer
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: app
+    container_name: movie-app
+    restart: unless-stopped
+    environment:
+      VIRTUAL_HOST: laravel.test
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+      - ~/.ssh:/root/.ssh
+    depends_on:
+      - redis 
+    networks:
+      - laravel
+
+# Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: movie-app-nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d
+      - ./docker-compose/nginx/ssl:/etc/nginx/conf.d/ssl
+      # - ./docker-compose/nginx/phpmyadmin.conf:/etc/nginx/conf.d/phpmyadmin.conf
+    networks:
+      - laravel
+      
+# Redis
+  redis:
+    image: "redis:alpine"
+    container_name: redis-movie-app
+    restart: unless-stopped
+    volumes:
+        - ./docker-compose/redis/data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - laravel 
+
+networks:
+  laravel:
+    driver: bridge

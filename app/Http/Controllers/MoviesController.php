@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\ViewModels\MovieViewModel;
 use App\ViewModels\MoviesViewModel;
 use Illuminate\Support\Facades\Http;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class MoviesController extends Controller
 {
@@ -16,9 +17,15 @@ class MoviesController extends Controller
      */
     public function index()
     {
-        $popularMovies = Http::withToken(config('services.tmdb.token'))
+        // dd(config('services.tmdb.token'));
+        try{
+            $popularMovies = Http::withToken(config('services.tmdb.token'))
             ->get('https://api.themoviedb.org/3/movie/popular')
             ->json()['results'];
+        }catch(\Exception $e){
+            throw new HttpException(500, $e->getMessage());
+        }
+        
 
         $nowPlayingMovies = Http::withToken(config('services.tmdb.token'))
             ->get('https://api.themoviedb.org/3/movie/now_playing')
